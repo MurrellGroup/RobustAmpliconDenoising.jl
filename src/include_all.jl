@@ -2,6 +2,8 @@
 # maybe remove for final version
 #using Reexport
 using Compat
+using DPMeansClustering
+using NextGenSeqUtils
 
 include("consensus.jl")
 include("clusterpipeline.jl")
