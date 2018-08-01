@@ -4,6 +4,7 @@
 using Compat
 using DPMeansClustering
 using NextGenSeqUtils
+using Distributions
 
 include("consensus.jl")
 include("clusterpipeline.jl")
