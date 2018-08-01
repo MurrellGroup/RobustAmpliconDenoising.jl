@@ -205,8 +205,8 @@ function are_homopolymers(alignment::Tuple{String,String};k=6,polylen::Int64=3)
         return false
     end
 
-    ind1 = findfirst(isequal('-'), alignment[1])
-    ind2 = findfirst(isequal('-'), alignment[2])
+    ind1 = findfirst(alignment[1], '-')#findfirst(isequal('-'), alignment[1])
+    ind2 = findfirst(alignment[2], '-')#findfirst(isequal('-'), alignment[2])
     diff = ind1-ind2
     #determine if inds are only on edges
     #        XXXXX- (ind1)
