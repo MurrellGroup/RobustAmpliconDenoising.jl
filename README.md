@@ -4,13 +4,7 @@ Approximate dirichlet amplicon denoiser (RAD) contains cluster and consensus too
 
 ## Installation
 ```julia
-Pkg.clone("RAD")
-
-```
-
-## Run tests
-```julia
-Pkg.test("https://github.com/MurrellGroup/Rad.jl.git")
+Pkg.clone("https://github.com/MurrellGroup/Rad.jl.git")
 
 ```
 
