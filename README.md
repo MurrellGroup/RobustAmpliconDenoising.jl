@@ -10,7 +10,7 @@ Pkg.clone("RAD")
 
 ## Run tests
 ```julia
-Pkg.test("RAD")
+Pkg.test("https://github.com/MurrellGroup/Rad.jl.git")
 
 ```
 
