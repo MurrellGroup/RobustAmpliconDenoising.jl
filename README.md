@@ -1,6 +1,6 @@
 ## Synopsis
 
-Approximate dirichlet amplicon denoiser (RAD) contains cluster and consensus tools.
+Robust amplicon denoiser (RAD) contains cluster and consensus tools.
 
 ## Installation
 ```julia
