@@ -18,7 +18,7 @@ module RAD
     kmer_split_clustering,
     kmer_split_consensus,
     get_ave_dists,
-    clusterpipeline,
+    clusterpipeline
 		
 
 end
