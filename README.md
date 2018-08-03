@@ -15,9 +15,9 @@ using RAD
 
 ## Getting started quickly:
 ```julia
-seqs, QVs, seq_names = read_fastq("someFile.fastq")
+seqs, QVs, seq_names = read_fastq("someInputFile.fastq")
 templates,template_sizes,template_indices = denoise(seqs)
-write_fasta(templates,names = ["seq$(j)_$(template_sizes[j])" for j in 1:length(template_sizes)])
+write_fasta("someInputFile.fasta",templates,names = ["seq$(j)_$(template_sizes[j])" for j in 1:length(template_sizes)])
 ```
 
 ## But...
