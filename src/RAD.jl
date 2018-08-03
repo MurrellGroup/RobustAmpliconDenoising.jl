@@ -1,4 +1,4 @@
-module RAD
+module Rad 
 
 	include("include_all.jl")
 
