@@ -14,8 +14,11 @@ using RAD
 ```
 
 ## Getting started quickly:
+```julia
 seqs, QVs, seq_names = read_fastq("someFile.fastq")
-sequences,sizes,indices = denoise(seqs)
+templates,template_sizes,template_indices = denoise(seqs)
+write_fasta(templates,names = ["seq$(j)_$(template_sizes[j])" for j in 1:length(template_sizes)])
+```
 
 ## But...
 You likely want to filter your reads by length, and by expected error rate. Also, PacBio reads come in random orientations, and you probably want to figure out how they should be oriented.
