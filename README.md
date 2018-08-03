@@ -1,17 +1,18 @@
 ## Synopsis
 
-Robust amplicon denoiser (RAD) contains cluster and consensus tools.
+Robust amplicon denoiser (RAD) contains cluster and consensus tools. Packaging in progress, so installation is not completely straightforward yet.
 
 ## Installation
+We need to install 3 packages to run RAD.
 ```julia
+Pkg.clone("https://github.com/MurrellGroup/NextGenSeqUtils.jl.git")
+Pkg.clone("https://github.com/MurrellGroup/DPMeansClustering.jl.git")
 Pkg.clone("https://github.com/MurrellGroup/Rad.jl.git")
-
 ```
 
 ## Load
 ```julia
-using NextGenSeqUtils
-using RAD
+using Rad
 ```
 
 ## Getting started quickly:
