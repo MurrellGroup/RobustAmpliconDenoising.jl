@@ -8,10 +8,18 @@ Pkg.clone("https://github.com/MurrellGroup/Rad.jl.git")
 
 ```
 
-## Set paths
+## Load
 ```julia
 using RAD
 ```
+
+## Getting started quickly:
+seqs, QVs, seq_names = read_fastq("someFile.fastq")
+sequences,sizes,indices = denoise(seqs)
+
+## But...
+You likely want to filter your reads by length, and by expected error rate. Also, PacBio reads come in random orientations, and you probably want to figure out how they should be oriented.
+
 
 <a id='Files-1'></a>
 # Files
