@@ -10,6 +10,7 @@ Pkg.clone("https://github.com/MurrellGroup/Rad.jl.git")
 
 ## Load
 ```julia
+using NextGenSeqUtils
 using RAD
 ```
 
@@ -17,7 +18,7 @@ using RAD
 ```julia
 seqs, QVs, seq_names = read_fastq("someInputFile.fastq")
 templates,template_sizes,template_indices = denoise(seqs)
-write_fasta("someInputFile.fasta",templates,names = ["seq$(j)_$(template_sizes[j])" for j in 1:length(template_sizes)])
+write_fasta("someOutputFile.fasta",templates,names = ["seq$(j)_$(template_sizes[j])" for j in 1:length(template_sizes)])
 ```
 
 ## But...
