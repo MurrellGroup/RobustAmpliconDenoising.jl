@@ -1,7 +1,7 @@
 # Consensus and Fine Cluster Splitting Functions
 
 ```@index
-consensus.md
+Pages = ["consensus.md"]
 ```
 
 ```@docs

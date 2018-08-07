@@ -1,7 +1,7 @@
 # Primary Clustering and Pipeline Functions
 
 ```@index
-clusterpipeline.md
+Pages = ["clusterpipeline.md"]
 ```
 
 ```@docs
