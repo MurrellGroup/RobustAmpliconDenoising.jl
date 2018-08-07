@@ -7,12 +7,12 @@ We need to install 3 packages to run RAD.
 ```julia
 Pkg.clone("https://github.com/MurrellGroup/NextGenSeqUtils.jl.git")
 Pkg.clone("https://github.com/MurrellGroup/DPMeansClustering.jl.git")
-Pkg.clone("https://github.com/MurrellGroup/Rad.jl.git")
+Pkg.clone("https://github.com/MurrellGroup/RAD.jl.git")
 ```
 
 ## Load
 ```julia
-using Rad
+using RAD
 ```
 
 ## Getting started quickly:
