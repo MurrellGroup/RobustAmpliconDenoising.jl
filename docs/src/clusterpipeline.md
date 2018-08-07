@@ -5,8 +5,9 @@ Pages = ["clusterpipeline.md"]
 ```
 
 ```@docs
+denoise
+kmer_split_clustering
+kmer_split_consensus
+get_ave_dists
 clusterpipeline
-fine_cluster_and_consensus
-cluster_and_consensus
-trim_to_refs
 ```

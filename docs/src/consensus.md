@@ -5,10 +5,9 @@ Pages = ["consensus.md"]
 ```
 
 ```@docs
-alignment_consensus
-consensus_seq
-recursive_split
-refine_ref
-consensus_viz
-get_centroid
+fine_clustering
+gen_arrangements
+cluster_split
+get_non_homopolymers
+are_homopolymers
 ```

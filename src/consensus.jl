@@ -78,7 +78,13 @@ function gen_arrangements(k)
     end
     return [join(i) for i in current]
 end
+"""
+	cluster_split(kmer_vecs, count, nuc_inds; rough_radius::Float64=0.01, fine_radius::Float64=1.0, clust_multiplier=1.0,
+                        min_devs=6, initial_devs=20, user_min_clust=10, distfunc=euclidean,
+                        center=mean, verbose::Int64=1, cycle_lim=20, triangle::Bool=false, p_value::Float64=0.01)
 
+Determines if passed cluster is a 'real' cluster and recursively splits non-error clusters
+"""
 function cluster_split(kmer_vecs, count, nuc_inds; rough_radius::Float64=0.01, fine_radius::Float64=1.0, clust_multiplier=1.0, 
                         min_devs=6, initial_devs=20, user_min_clust=10, distfunc=euclidean, 
                         center=mean, verbose::Int64=1, cycle_lim=20, triangle::Bool=false, p_value::Float64=0.01)

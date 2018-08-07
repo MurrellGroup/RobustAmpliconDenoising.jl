@@ -1,15 +1,11 @@
-module RAD 
 
-	include("include_all.jl")
 
-	export
 
-	# consensus.jl
-
+export
 	fine_clustering,
-    	gen_arrangements,
-   	cluster_split,
-   	get_non_homopolymers,
+	gen_arrangements,
+    	cluster_split,
+    	get_non_homopolymers,
     	are_homopolymers,
 
 	# clusterpipeline.jl
@@ -19,6 +15,4 @@ module RAD
     	kmer_split_consensus,
     	get_ave_dists,
     	clusterpipeline
-		
 
-end
