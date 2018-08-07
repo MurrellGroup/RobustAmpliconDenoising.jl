@@ -6,3 +6,6 @@
 Pages = ["clusterpipeline.md", "consensus.md"]
 Depth = 2
 ```
+
+```@index
+```
