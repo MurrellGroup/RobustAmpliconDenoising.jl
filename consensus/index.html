@@ -107,15 +107,47 @@
                 <p><a id='Consensus-and-Fine-Cluster-Splitting-Functions-1'></a></p>
 <h1 id="consensus-and-fine-cluster-splitting-functions">Consensus and Fine Cluster Splitting Functions</h1>
 <ul>
-<li><a href="../clusterpipeline/#RAD.clusterpipeline"><code>RAD.clusterpipeline</code></a></li>
+<li><a href="./#RAD.are_homopolymers"><code>RAD.are_homopolymers</code></a></li>
+<li><a href="./#RAD.cluster_split"><code>RAD.cluster_split</code></a></li>
+<li><a href="./#RAD.fine_clustering"><code>RAD.fine_clustering</code></a></li>
+<li><a href="./#RAD.gen_arrangements"><code>RAD.gen_arrangements</code></a></li>
+<li><a href="./#RAD.get_non_homopolymers"><code>RAD.get_non_homopolymers</code></a></li>
 </ul>
-<pre><code>alignment_consensus
-consensus_seq
-recursive_split
-refine_ref
-consensus_viz
-get_centroid
+<p><a id='RAD.fine_clustering' href='#RAD.fine_clustering'>#</a>
+<strong><code>RAD.fine_clustering</code></strong> &mdash; <em>Function</em>.</p>
+<p>fine_clustering(kmer_vecs; rough_radius::Float64 = 0.01, fine_radius::Float64 = 1.0, clust_multiplier = 1.0,                          min_devs = 6, initial_devs = 20, user_min_clust = 10, distfunc = euclidean, center = mean,                         verbose::Int64 = 1, cycle_lim = 20, triangle::Bool = false, p_value::Float64 = 0.01)</p>
+<p>Preforms fine clustering on the already rough clustered sequences. </p>
+<p><a target='_blank' href='https://github.com/MurrellGroup/RAD.jl/blob/6151ae06c78da4f896cc88d797fefcac436053eb/src/consensus.jl#L5-L12' class='documenter-source'>source</a><br></p>
+<p><a id='RAD.gen_arrangements' href='#RAD.gen_arrangements'>#</a>
+<strong><code>RAD.gen_arrangements</code></strong> &mdash; <em>Function</em>.</p>
+<pre><code> gen_arrangements(k)
 </code></pre>
+
+<p>Returns an array containing all possible kmer sequences of length k</p>
+<p><a target='_blank' href='https://github.com/MurrellGroup/RAD.jl/blob/6151ae06c78da4f896cc88d797fefcac436053eb/src/consensus.jl#L66-L72' class='documenter-source'>source</a><br></p>
+<p><a id='RAD.cluster_split' href='#RAD.cluster_split'>#</a>
+<strong><code>RAD.cluster_split</code></strong> &mdash; <em>Function</em>.</p>
+<pre><code>cluster_split(kmer_vecs, count, nuc_inds; rough_radius::Float64=0.01, fine_radius::Float64=1.0, clust_multiplier=1.0,
+                    min_devs=6, initial_devs=20, user_min_clust=10, distfunc=euclidean,
+                    center=mean, verbose::Int64=1, cycle_lim=20, triangle::Bool=false, p_value::Float64=0.01)
+</code></pre>
+
+<p>Determines if passed cluster is a 'real' cluster and recursively splits non-error clusters</p>
+<p><a target='_blank' href='https://github.com/MurrellGroup/RAD.jl/blob/6151ae06c78da4f896cc88d797fefcac436053eb/src/consensus.jl#L81-L87' class='documenter-source'>source</a><br></p>
+<p><a id='RAD.get_non_homopolymers' href='#RAD.get_non_homopolymers'>#</a>
+<strong><code>RAD.get_non_homopolymers</code></strong> &mdash; <em>Function</em>.</p>
+<pre><code>get_non_homopolymers(dev_inds::Array{Int64, 1}, nuc_inds; min_devs = 6)
+</code></pre>
+
+<p>Takes in array of kmer indices. Returns the highest standard deviation non-homopolymer indices</p>
+<p><a target='_blank' href='https://github.com/MurrellGroup/RAD.jl/blob/6151ae06c78da4f896cc88d797fefcac436053eb/src/consensus.jl#L164-L169' class='documenter-source'>source</a><br></p>
+<p><a id='RAD.are_homopolymers' href='#RAD.are_homopolymers'>#</a>
+<strong><code>RAD.are_homopolymers</code></strong> &mdash; <em>Function</em>.</p>
+<pre><code>are_homopolymers(alignment::Tuple{String,String}; k = 6, polylen = 3)
+</code></pre>
+
+<p>Determines if the aligned kmers represent a homopolymer difference. If the kmers represent a homopolymer difference, the function returns true.</p>
+<p><a target='_blank' href='https://github.com/MurrellGroup/RAD.jl/blob/6151ae06c78da4f896cc88d797fefcac436053eb/src/consensus.jl#L195-L201' class='documenter-source'>source</a><br></p>
               
             </div>
           </div>
