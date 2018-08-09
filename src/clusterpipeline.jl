@@ -164,7 +164,7 @@ function get_ave_dists(fine_indices, original_seqs, consensus_seqs; distfunc=euc
 end
 
 """
-    clusterpipeline(infile::String; <Keyword Arguments> )
+    denoise_pipeline(infile::String; <Keyword Arguments> )
 
                          prefix = "",
                          outfile = "",
@@ -255,7 +255,7 @@ error.
 
 
 """
-function clusterpipeline(infile::String;
+function denoise_pipeline(infile::String;
                          prefix = "", outfile = "", ref_file = "",
                          error_filter = 0.01,
                          homopoly_filter = true,
@@ -405,7 +405,7 @@ function clusterpipeline(infile::String;
     end
 end
 
-simple_clusterpipeline = clusterpipeline
+simple_clusterpipeline = denoise_pipeline
 
 
 

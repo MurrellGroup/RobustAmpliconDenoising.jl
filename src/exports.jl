@@ -2,17 +2,18 @@
 
 
 export
-	fine_clustering,
-	gen_arrangements,
-    	cluster_split,
-    	get_non_homopolymers,
-    	are_homopolymers,
-
 	# clusterpipeline.jl
 
 	denoise,
-    	kmer_split_clustering,
-    	kmer_split_consensus,
-    	get_ave_dists,
-    	clusterpipeline
+    	denoise_pipeline,
+	alignment_consensus,
+	get_centroid,
+	
+	consensus_seq,
+	refine_ref,
+	consensus_viz,
+	disagreements,
+	diff_in_homopolymer_region,
+	get_coarse_centroid,
+	trim_to_refs,
 

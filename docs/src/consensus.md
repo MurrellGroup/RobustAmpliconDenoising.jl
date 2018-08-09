@@ -5,9 +5,12 @@ Pages = ["consensus.md"]
 ```
 
 ```@docs
-fine_clustering
-gen_arrangements
-cluster_split
-get_non_homopolymers
-are_homopolymers
+alignment_consensus
+get_centroid
+consensus_seq
+refine_ref
+consensus_viz
+disagreements
+diff_in_homopolymer_region
+get_coarse_centroid
 ```
