@@ -311,47 +311,73 @@
                 <p><a id='Consensus-and-Fine-Cluster-Splitting-Functions-1'></a></p>
 <h1 id="consensus-and-fine-cluster-splitting-functions">Consensus and Fine Cluster Splitting Functions</h1>
 <ul>
-<li><a href="./#RAD.are_homopolymers"><code>RAD.are_homopolymers</code></a></li>
-<li><a href="./#RAD.cluster_split"><code>RAD.cluster_split</code></a></li>
-<li><a href="./#RAD.fine_clustering"><code>RAD.fine_clustering</code></a></li>
-<li><a href="./#RAD.gen_arrangements"><code>RAD.gen_arrangements</code></a></li>
-<li><a href="./#RAD.get_non_homopolymers"><code>RAD.get_non_homopolymers</code></a></li>
+<li><a href="./#RAD.alignment_consensus"><code>RAD.alignment_consensus</code></a></li>
+<li><a href="./#RAD.consensus_seq"><code>RAD.consensus_seq</code></a></li>
+<li><a href="./#RAD.consensus_viz"><code>RAD.consensus_viz</code></a></li>
+<li><a href="./#RAD.diff_in_homopolymer_region"><code>RAD.diff_in_homopolymer_region</code></a></li>
+<li><a href="./#RAD.disagreements"><code>RAD.disagreements</code></a></li>
+<li><a href="./#RAD.get_centroid"><code>RAD.get_centroid</code></a></li>
+<li><a href="./#RAD.get_coarse_centroid"><code>RAD.get_coarse_centroid</code></a></li>
+<li><a href="./#RAD.refine_ref"><code>RAD.refine_ref</code></a></li>
 </ul>
-<p><a id='RAD.fine_clustering' href='#RAD.fine_clustering'>#</a>
-<strong><code>RAD.fine_clustering</code></strong> &mdash; <em>Function</em>.</p>
-<p>fine_clustering(kmer_vecs; rough_radius::Float64 = 0.01, fine_radius::Float64 = 1.0, clust_multiplier = 1.0,                          min_devs = 6, initial_devs = 20, user_min_clust = 10, distfunc = euclidean, center = mean,                         verbose::Int64 = 1, cycle_lim = 20, triangle::Bool = false, p_value::Float64 = 0.01)</p>
-<p>Preforms fine clustering on the already rough clustered sequences. </p>
-<p><a target='_blank' href='https://github.com/MurrellGroup/RAD.jl/blob/6151ae06c78da4f896cc88d797fefcac436053eb/src/consensus.jl#L5-L12' class='documenter-source'>source</a><br></p>
-<p><a id='RAD.gen_arrangements' href='#RAD.gen_arrangements'>#</a>
-<strong><code>RAD.gen_arrangements</code></strong> &mdash; <em>Function</em>.</p>
-<pre><code> gen_arrangements(k)
+<p><a id='RAD.alignment_consensus' href='#RAD.alignment_consensus'>#</a>
+<strong><code>RAD.alignment_consensus</code></strong> &mdash; <em>Function</em>.</p>
+<pre><code>alignment_consensus(seqs)
 </code></pre>
 
-<p>Returns an array containing all possible kmer sequences of length k</p>
-<p><a target='_blank' href='https://github.com/MurrellGroup/RAD.jl/blob/6151ae06c78da4f896cc88d797fefcac436053eb/src/consensus.jl#L66-L72' class='documenter-source'>source</a><br></p>
-<p><a id='RAD.cluster_split' href='#RAD.cluster_split'>#</a>
-<strong><code>RAD.cluster_split</code></strong> &mdash; <em>Function</em>.</p>
-<pre><code>cluster_split(kmer_vecs, count, nuc_inds; rough_radius::Float64=0.01, fine_radius::Float64=1.0, clust_multiplier=1.0,
-                    min_devs=6, initial_devs=20, user_min_clust=10, distfunc=euclidean,
-                    center=mean, verbose::Int64=1, cycle_lim=20, triangle::Bool=false, p_value::Float64=0.01)
+<p>Computes a consensus sequence for array of given sequences that have already been aligned. Consensus is computed by site-wise mode among given sequences.</p>
+<p><a target='_blank' href='https://github.com/MurrellGroup/RAD.jl/blob/5fa5cf2ec24f738b5bbee03dcb391f387c2aac3d/src/consensus.jl#L355-L360' class='documenter-source'>source</a><br></p>
+<p><a id='RAD.get_centroid' href='#RAD.get_centroid'>#</a>
+<strong><code>RAD.get_centroid</code></strong> &mdash; <em>Function</em>.</p>
+<pre><code>get_centroid(reads, k, distfunc = corrected_kmer_dist)
 </code></pre>
 
-<p>Determines if passed cluster is a 'real' cluster and recursively splits non-error clusters</p>
-<p><a target='_blank' href='https://github.com/MurrellGroup/RAD.jl/blob/6151ae06c78da4f896cc88d797fefcac436053eb/src/consensus.jl#L81-L87' class='documenter-source'>source</a><br></p>
-<p><a id='RAD.get_non_homopolymers' href='#RAD.get_non_homopolymers'>#</a>
-<strong><code>RAD.get_non_homopolymers</code></strong> &mdash; <em>Function</em>.</p>
-<pre><code>get_non_homopolymers(dev_inds::Array{Int64, 1}, nuc_inds; min_devs = 6)
+<p>Computes a rough cluster centroid by returning the sequence in <code>reads</code> that has the nearest distance in <code>k</code>-mer space to the mean <code>k</code>-mer vector.</p>
+<p><a target='_blank' href='https://github.com/MurrellGroup/RAD.jl/blob/5fa5cf2ec24f738b5bbee03dcb391f387c2aac3d/src/consensus.jl#L395-L400' class='documenter-source'>source</a><br></p>
+<p><a id='RAD.consensus_seq' href='#RAD.consensus_seq'>#</a>
+<strong><code>RAD.consensus_seq</code></strong> &mdash; <em>Function</em>.</p>
+<pre><code>consensus_seq(reads; thresh = 0.7, shift = 1, k = 6,
+                   distfunc = corrected_kmer_dist)
 </code></pre>
 
-<p>Takes in array of kmer indices. Returns the highest standard deviation non-homopolymer indices</p>
-<p><a target='_blank' href='https://github.com/MurrellGroup/RAD.jl/blob/6151ae06c78da4f896cc88d797fefcac436053eb/src/consensus.jl#L164-L169' class='documenter-source'>source</a><br></p>
-<p><a id='RAD.are_homopolymers' href='#RAD.are_homopolymers'>#</a>
-<strong><code>RAD.are_homopolymers</code></strong> &mdash; <em>Function</em>.</p>
-<pre><code>are_homopolymers(alignment::Tuple{String,String}; k = 6, polylen = 3)
+<p>Computes a cluster centroid by taking the nearest read to the mean <code>k</code>-mer vector (see <code>get_centroid(reads, k, distfunc)</code>) and refining it (see <code>refine_ref(ref, reads)</code>). <code>shift</code> determines the window size of comparison between sequences when refining rough centroid  locally (actual window size is <code>shift+1</code>).</p>
+<p><a target='_blank' href='https://github.com/MurrellGroup/RAD.jl/blob/5fa5cf2ec24f738b5bbee03dcb391f387c2aac3d/src/consensus.jl#L408-L416' class='documenter-source'>source</a><br></p>
+<p><a id='RAD.refine_ref' href='#RAD.refine_ref'>#</a>
+<strong><code>RAD.refine_ref</code></strong> &mdash; <em>Function</em>.</p>
+<pre><code>refine_ref(candidate_ref, reads;  thresh = 0.7, shift = 1)
 </code></pre>
 
-<p>Determines if the aligned kmers represent a homopolymer difference. If the kmers represent a homopolymer difference, the function returns true.</p>
-<p><a target='_blank' href='https://github.com/MurrellGroup/RAD.jl/blob/6151ae06c78da4f896cc88d797fefcac436053eb/src/consensus.jl#L195-L201' class='documenter-source'>source</a><br></p>
+<p>Takes a candidate consensus sequence, <code>candidate_ref</code>, and corresponding array of <code>reads</code> and refines the candidate via majority votes from reads at local windows of size <code>shift+1</code>. If after alignment the frequency of a local region of the candidate  is less than <code>thresh</code>, this part of the candidate is refined.</p>
+<p><a target='_blank' href='https://github.com/MurrellGroup/RAD.jl/blob/5fa5cf2ec24f738b5bbee03dcb391f387c2aac3d/src/consensus.jl#L470-L477' class='documenter-source'>source</a><br></p>
+<p><a id='RAD.consensus_viz' href='#RAD.consensus_viz'>#</a>
+<strong><code>RAD.consensus_viz</code></strong> &mdash; <em>Function</em>.</p>
+<pre><code>consensus_viz(candidate_ref, reads; thresh = 0.7, shift = 3, 
+              intitle = &quot;Consensus agreement.&quot;)
+</code></pre>
+
+<p>Creates a plot to visualize the agreement of a consensus sequence, <code>candidate_ref</code>,  with its cluster of <code>reads</code>.  Size of local window/site for comparison = <code>shift+1</code>. I'm pretty sure <code>thresh</code> does nothing here.</p>
+<p><a target='_blank' href='https://github.com/MurrellGroup/RAD.jl/blob/5fa5cf2ec24f738b5bbee03dcb391f387c2aac3d/src/consensus.jl#L768-L776' class='documenter-source'>source</a><br></p>
+<p><a id='RAD.disagreements' href='#RAD.disagreements'>#</a>
+<strong><code>RAD.disagreements</code></strong> &mdash; <em>Function</em>.</p>
+<pre><code>disagreements(candidate_ref, reads; thresh = 0.7, shift = 3)
+</code></pre>
+
+<p>Prints local disagreements between <code>candidate_ref</code> and each sequence of <code>reads</code> after aligning. Size of local window/site for comparison = <code>shift+1</code>. A disagreement is a region where the candidate has a local region with frequency less than <code>thresh</code>.</p>
+<p><a target='_blank' href='https://github.com/MurrellGroup/RAD.jl/blob/5fa5cf2ec24f738b5bbee03dcb391f387c2aac3d/src/consensus.jl#L794-L800' class='documenter-source'>source</a><br></p>
+<p><a id='RAD.diff_in_homopolymer_region' href='#RAD.diff_in_homopolymer_region'>#</a>
+<strong><code>RAD.diff_in_homopolymer_region</code></strong> &mdash; <em>Function</em>.</p>
+<pre><code>diff_in_homopolymer_region(alignment::Array{String, 1}; polylen=3)
+</code></pre>
+
+<p>Returns true if two aligned sequences differ only by single gaps in homopolyer regions  (ie one gap per region). <code>alignment</code> is an array of two strings that have already been aligned. A homopolymer region is determined to be a region of a single repeated  nucleotide of length at least <code>polylen</code>.</p>
+<p><a target='_blank' href='https://github.com/MurrellGroup/RAD.jl/blob/5fa5cf2ec24f738b5bbee03dcb391f387c2aac3d/src/consensus.jl#L854-L861' class='documenter-source'>source</a><br></p>
+<p><a id='RAD.get_coarse_centroid' href='#RAD.get_coarse_centroid'>#</a>
+<strong><code>RAD.get_coarse_centroid</code></strong> &mdash; <em>Function</em>.</p>
+<pre><code>get_coarse_centroid(seqs::Array{String, 1}; subsample = 1000, k = 4)
+</code></pre>
+
+<p>Returns a 'master consensus' representing largest coarse cluster of sequences,  computed among a subsample of <code>reads</code>. The consensus is the closest sequence of  <code>reads</code> to the mean <code>k</code>-mer vector in the largest computed cluster.</p>
+<p><a target='_blank' href='https://github.com/MurrellGroup/RAD.jl/blob/5fa5cf2ec24f738b5bbee03dcb391f387c2aac3d/src/consensus.jl#L937-L943' class='documenter-source'>source</a><br></p>
                 
                   
                 
