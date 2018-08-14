@@ -1,4 +1,4 @@
-module RAD 
+module RobustAmpliconDenoising 
 
 	include("include_all.jl")
 
