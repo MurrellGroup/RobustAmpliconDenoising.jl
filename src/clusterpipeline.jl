@@ -107,7 +107,7 @@ function kmer_split_consensus(kmer_vecs, seqs, fine_indices; verbose::Int64=1, d
 
     #determine consensus sequences that spawned each of the sequence clusters
     consensus = [consensus_seq(clust, degap_param = degap_param) for clust in seq_clusters]
-
+    consensus, sizes = FAD_clean(consensus, [length(indices) for indices in fine_indices])
     #adds back singletons from a preliminary clustering step in fine_clustering in order to obtain more
     #accurate frequencies
     if reassign
@@ -141,9 +141,56 @@ function kmer_split_consensus(kmer_vecs, seqs, fine_indices; verbose::Int64=1, d
             return consensus[arr], sizes[arr], cluster_indices[arr]
         end
     else
-        return consensus, [length(clust) for clust in fine_indices], fine_indices
+        return consensus, sizes, fine_indices
     end
 end
+
+function FAD_clean(seqs, sizes; alpha = 0.01, neigh_thresh = 1.0,method = 2,err_rate=0.02, phreds = nothing)
+    expected_zero_errors=1.0
+    if !(method in [1,2])
+        warn("Please pick a method in 1,2,3")
+        return [],[]
+    end
+    #Method list:
+    #1: No statistical considerations. All smaller relatives get eaten.
+    #2: Use Poisson test to decide to add not-too-small relatives back in.
+
+
+#    counts = countmap(seqs);
+    seq_keys = seqs;
+seq_freqs_all = reverse(sort([(sizes[k],seq_keys[k],kmer_count(seq_keys[k],6)) for k in 1:length(seq_keys)]));
+    seq_freqs = seq_freqs_all[[k[1]>=2 for k in seq_freqs_all]];
+
+
+    current_set = [seq_freqs[1]];
+    for i in 2:length(seq_freqs)
+        dists = [corrected_kmer_dist_full(k[3],seq_freqs[i][3]) for k in current_set]
+        neighbour_set = dists.<=neigh_thresh
+
+        #if no neighbours within radius, add to current_set
+        if sum(neighbour_set)==0
+            push!(current_set,seq_freqs[i])
+        else
+            if method == 2
+                inds = collect(1:length(current_set))[neighbour_set]
+                best = indmax(current_set[inds])
+                p_val = (1-cdf(Poisson((current_set[inds][best][1]/expected_zero_errors)*err_rate),seq_freqs[i][1]))*length(seq_freqs[i][2])
+                if p_val < alpha
+                    push!(current_set,seq_freqs[i])
+                end
+            end                
+        end
+    end
+
+    frequencies = zeros(length(current_set))
+    for s in seq_freqs_all
+        dists = [corrected_kmer_dist_full(k[3],s[3],k=6) for k in current_set]
+        frequencies[indmin(dists)] += s[1]
+    end
+    return [k[2] for k in current_set],frequencies
+
+end
+
 
 """
     get_ave_dists(fine_indices, original_seqs, consensus_seqs; distfunc=euclidean, center=median, k::Int64=6)
