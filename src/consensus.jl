@@ -23,7 +23,6 @@ function fine_clustering(kmer_vecs; rough_radius::Float64=0.01, fine_radius::Flo
     elseif verbose == 0
         v = 0
     end
-       
     #"rough" clustering step to get the massively different sequences into different clusters
     μs, sizes, indices, centroid_inds = cluster(kmer_vecs, rough_radius, distfunc=corrected_kmer_dist,
                                         center=center,verbose=v, cycle_lim=cycle_lim, triangle=triangle)
@@ -119,10 +118,12 @@ function cluster_split(kmer_vecs, count, nuc_inds; rough_radius::Float64=0.01, f
     #minimum non-error cluster size. Estimate of the sum of poisson distributions
     #min_clust = clust_multiplier*.25*2.5*sqrt(rough_radius*sum(kmer_vecs[1])*2*log(maximum(sizes)))
     #minimum cluster size is the largest number between user input and the minimum non-error size
-    first_keep_inds = find(user_min_clust.<sizes)
+    keep_inds = find(user_min_clust.<sizes)
     #keep_inds = Array{Int64, 1}()
     #for ind in first_keep_inds
-    keep_inds = [ind for ind in first_keep_inds if (1-cdf(Poisson(maximum(sizes)*(rough_radius/4)), sizes[ind])) *sum(kmer_vecs[1]) < p_value]
+
+    
+    #keep_inds = [ind for ind in first_keep_inds if (1-cdf(Poisson(maximum(sizes)*(rough_radius/4)), sizes[ind])) *sum(kmer_vecs[1]) < p_value]
 
     #if there are no clusters to keep, add everything to the largest one 
     if length(keep_inds) == 0 || length(keep_inds) == 1
@@ -220,10 +221,8 @@ function are_homopolymers(alignment::Tuple{String,String};k=6,polylen::Int64=3)
     if abs(diff) == k #both gaps are on edges
         str = al1[1:(1+polylen)] * al2[1:(1+polylen)]
         if (length(unique(al1[1:(1+polylen)] * al2[1:(1+polylen)])) == 2) || (length(unique(al1[(len-polylen):len] * al2[(len-polylen):len])) == 2)
-            #println("TRUE 1")
             return true
         else
-            #println("FALSE 2")
             return false
         end
     elseif ind1 == 1 || ind2 == 1 #one gap on left edge, one on non-edge
@@ -233,16 +232,12 @@ function are_homopolymers(alignment::Tuple{String,String};k=6,polylen::Int64=3)
             temp = ind1
         end
         if length(unique(al1[1:(1+polylen)] * al2[1:(1+polylen)])) == 2 #edge box is true. THIS MEANS NO HOMOPOLY!!!
-            #println("FALSE 3")
             return false
 
         else #edge box is false. May be a homopoly. 
             if temp + polylen <= len && length(unique(al1[temp:(temp+polylen)]*al2[temp:(temp+polylen)])) == 2
-                          #  println("TRUE 5")
                 return true
             elseif temp - polylen >= 1 && length(unique(al1[(temp-polylen):temp]*al2[(temp-polylen):temp])) == 2
-                           # println("TRUE 6")
-
                 return true
             end
         end
@@ -266,17 +261,13 @@ function are_homopolymers(alignment::Tuple{String,String};k=6,polylen::Int64=3)
             temp = ind1
         end
         if length(unique(al1[(len-polylen):len] * al2[(len-polylen):len])) == 2 #edge box is true. THIS MEANS NO HOMOPOLY!!!
-            #println("FALSE 7")
             return false
         else #edge box is false. May be a homopoly
 
             if temp + polylen <= len && length(unique(al1[temp:(temp+polylen)]*al2[temp:(temp+polylen)])) == 2
-             #println("TRUE 9")
 
                 return true
             elseif temp - polylen >= 1 && length(unique(al1[(temp-polylen):temp]*al2[(temp-polylen):temp])) == 2
-             #println("TRUE 10")
-
                 return true
             end
         end
@@ -521,7 +512,6 @@ function refine_ref(candidate_ref, reads; degap_param = true, thresh = 0.7, shif
 
     # # if something breaks, CHECK THIS FIRST!
     if sum(1-boolVec) < 0.5
-        #println("Exiting without changing the middle of the string!")
         return frontStr * candidate_ref * endStr
     end
     ranges = []
@@ -546,14 +536,6 @@ function refine_ref(candidate_ref, reads; degap_param = true, thresh = 0.7, shif
         newRef = newRef*insStr
         newRef = newRef*candidate_ref[ranges[i][2]+1:ranges[i+1][1]-1]
     end
-
-    # don't think I need these checks anymore.
-    # varFront, varEnd = var([length(k) for k in frontStrCol]), var([length(k) for k in endStrCol])
-    # if(varFront > 1 || varEnd > 1)
-    #     println("WARNING: Candidate reference has potential overhang problems and may not be properly resolved. Consider trying a different read as the candidate reference.")
-    # end
-    # println(frontStrCol)
-    # println(endStrCol)
 
     low, high = ranges[length(ranges)][1], ranges[length(ranges)][2]
     insStr = mode([degap((alignments[j][2])[maps[j][low]:maps[j][high]]) for j in 1:length(maps)])
