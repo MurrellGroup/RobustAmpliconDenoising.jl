@@ -2,8 +2,8 @@
 # maybe remove for final version
 using Reexport
 using Compat
-using DPMeansClustering
-@reexport using NextGenSeqUtils
+#using DPMeansClustering
+#@reexport using NextGenSeqUtils
 using Distributions
 
 include("consensus.jl")
