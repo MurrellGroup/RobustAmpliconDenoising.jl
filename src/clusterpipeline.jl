@@ -59,12 +59,9 @@ function denoise(seqs; rough_radius::Float64=0.01, fine_radius::Float64=1.0, rea
 
     #transforms input sequences into vectors of kmer frequencies
     kmer_vecs = [kmer_count(seq, k) for seq in seqs];
-
     fine_indices =  fine_clustering(kmer_vecs, rough_radius=rough_radius, fine_radius=fine_radius, clust_multiplier=clust_multiplier,
                            min_devs=min_devs, initial_devs=initial_devs, user_min_clust=user_min_clust, distfunc=distfunc,
                            center=center, verbose=verbose, cycle_lim=cycle_lim, triangle=triangle, p_value=p_value)
-
-
     return kmer_split_consensus(kmer_vecs, seqs, fine_indices, verbose=verbose, distfunc=distfunc, reassign=reassign,
                             k=k, degap_param=degap_param, user_min_clust=user_min_clust, Polish=Polish)
 end
@@ -108,14 +105,11 @@ function kmer_split_consensus(kmer_vecs, seqs, fine_indices; verbose::Int64=1, d
 
     #determine consensus sequences that spawned each of the sequence clusters
     consensus = [consensus_seq(5, clust, degap_param = degap_param) for clust in seq_clusters]
-    soop=[length(indices) for indices in fine_indices]
-    write_fasta("/home/mchernys/111q.fasta", consensus, names=["na_"*string(i) for i in soop])
+
 
     consensus, sizes = FAD_clean(consensus, [length(indices) for indices in fine_indices])
     #adds back singletons from a preliminary clustering step in fine_clustering in order to obtain more
     #accurate frequencies
-    write_fasta("/home/mchernys/111.fasta", consensus, names=["na_"*string(i) for i in sizes])
-
     if reassign
         if verbose > 0
             println("Reassigning singleton inputs to consensus sequences to improve accuracy of frequencies")
@@ -164,7 +158,7 @@ function FAD_clean(seqs, sizes; alpha = 0.01, neigh_thresh = 1.0, method = 2, er
 
 #    counts = countmap(seqs);
     seq_keys = seqs;
-seq_freqs_all = reverse(sort([(sizes[k],seq_keys[k],kmer_count(seq_keys[k],6)) for k in 1:length(seq_keys)]));
+    seq_freqs_all = reverse(sort([(sizes[k],seq_keys[k],kmer_count(seq_keys[k],6)) for k in 1:length(seq_keys)]));
     seq_freqs = seq_freqs_all[[k[1]>=2 for k in seq_freqs_all]];
 
 

@@ -28,8 +28,6 @@ function fine_clustering(kmer_vecs; rough_radius::Float64=0.01, fine_radius::Flo
     μs, sizes, indices, centroid_inds = cluster(kmer_vecs, rough_radius, distfunc=corrected_kmer_dist,
                                         center=center,verbose=v, cycle_lim=cycle_lim, triangle=triangle)
 
-
-
     #only sequences greater than indicated size may form a cluster
     keep_inds = findall(user_min_clust .< sizes)
     indices = indices[keep_inds]
@@ -46,25 +44,17 @@ function fine_clustering(kmer_vecs; rough_radius::Float64=0.01, fine_radius::Flo
     elseif verbose == 2
         in_verbose = 1
     end
-    count=1
 
     #call cluster_split on every cluster created by rough clustering
     for ind in 1:length(indices)
         if verbose > 0
             println("Splitting cluster number $(ind)")
         end
-        temp =cluster_split(count, kmer_vecs[indices[ind]], 1, nuc_inds, rough_radius=rough_radius, fine_radius=fine_radius,
+        temp =cluster_split(kmer_vecs[indices[ind]], 1, nuc_inds, rough_radius=rough_radius, fine_radius=fine_radius,
             clust_multiplier=clust_multiplier, min_devs=min_devs, initial_devs=initial_devs, user_min_clust=user_min_clust,
             distfunc=euclidean,center=center, verbose=in_verbose, cycle_lim=cycle_lim, triangle=triangle, p_value=p_value)
         for i in 1:length(temp)
             push!(fine_indices, indices[ind][temp[i]])
-            f=open("/home/mchernys/Documents/Murrell_lab/RAD_project/interm/testnew_ifines"
-            *string(count)*".txt", "a")
-            #arr=[join(a) for a in fine_indices[end]]
-            str=join(fine_indices[end])
-            write(f, str)
-            close(f)
-            count+=1
         end
 
     end
@@ -97,7 +87,7 @@ end
 
 Determines if passed cluster is a 'real' cluster and recursively splits non-error clusters
 """
-function cluster_split(ind, kmer_vecs, count, nuc_inds; rough_radius::Float64=0.01, fine_radius::Float64=1.0, clust_multiplier=1.0,
+function cluster_split(kmer_vecs, count, nuc_inds; rough_radius::Float64=0.01, fine_radius::Float64=1.0, clust_multiplier=1.0,
                         min_devs=6, initial_devs=20, user_min_clust=10, distfunc=euclidean,
                         center=mean, verbose::Int64=1, cycle_lim=20, triangle::Bool=false, p_value::Float64=0.01)
     if verbose == 2
@@ -109,23 +99,6 @@ function cluster_split(ind, kmer_vecs, count, nuc_inds; rough_radius::Float64=0.
     k = Int(log(4, length(kmer_vecs[1])))
     num_vecs = length(kmer_vecs)
     #stdevs=Array{Float64, 1}()
-    """"
-    for  kmer_ind in 1:4^k
-        arr=Array{Float64, 1}()
-        for seq_ind in 1:length(kmer_vecs)
-            push!(arr, kmer_vecs[seq_ind][kmer_ind])
-        end
-        if ind==81
-            f=open("/home/mchernys/Documents/Murrell_lab/RAD_project/interm2/81stnew_arrs.txt", "a")
-            str=join(arr)
-            write(f, str)
-            close(f)
-            println(arr)
-
-        end
-        push!(stdevs, std(arr))
-    end
-    """
     #arr of each kmer's stdev throughout the kmer vectors
     aple=[[kmer_vecs[seq_ind][kmer_ind] for seq_ind in 1:length(kmer_vecs)] for kmer_ind in 1:4^k]
 
@@ -177,7 +150,7 @@ function cluster_split(ind, kmer_vecs, count, nuc_inds; rough_radius::Float64=0.
             if !(i in keep_inds) #if that cluster is not one of the kept clusters
                 C_arr = indices[i] #get the array of seq indices corresponding to the cluster
                 for index in C_arr #go through every seq indix in the non-kept cluster
-                    push!(final_indices[findmin([distfunc(kmer_vecs[index], center) for center in keep_centers])[2]],
+                    push!(final_indices[argmin([distfunc(kmer_vecs[index], center) for center in keep_centers])],
                             index)
                 end
             end
@@ -187,7 +160,7 @@ function cluster_split(ind, kmer_vecs, count, nuc_inds; rough_radius::Float64=0.
     #if the input has gotten this far, it must be split. Call cluster_split on each current cluster
     for clust_ind in 1:length(final_indices)
         outer_clust = copy(final_indices[clust_ind])
-        new_clusts = cluster_split(ind, kmer_vecs[outer_clust], count, nuc_inds, rough_radius=rough_radius, fine_radius=fine_radius,
+        new_clusts = cluster_split(kmer_vecs[outer_clust], count, nuc_inds, rough_radius=rough_radius, fine_radius=fine_radius,
                                     min_devs=min_devs, distfunc=distfunc,center=center,verbose=verbose,
                                     cycle_lim=cycle_lim, triangle=triangle, p_value=p_value)
         for new_clust in new_clusts
@@ -429,7 +402,7 @@ function get_centroid(reads, k, distfunc = corrected_kmer_dist)
     kmerVecs = [kmer_count(read, k) for read in reads]
     meanVec = mean(kmerVecs)
     dists = [distfunc(kmerVec, meanVec, k=k) for kmerVec in kmerVecs]
-    return reads[findmin(dists)[2]]
+    return reads[argmin(dists)]
 end
 
 """
@@ -686,7 +659,7 @@ function peak_split(candidate_ref, reads; thresh = 0.7, shift = 3, minReads = 5,
         ali = nw_align(sortedFreqs[1][2], sortedFreqs[2][2])
         if !differ_by_just_one_gap(ali, polylen=polylen)
             scoreList[i] = minimum(matches[ranges[i][1]:ranges[i][2]])
-            scoreInds[i] = findmin(matches[ranges[i][1]:ranges[i][2]])[2] + ranges[i][1] - 1
+            scoreInds[i] = argmin(matches[ranges[i][1]:ranges[i][2]]) + ranges[i][1] - 1
         end
     end
 
@@ -727,7 +700,7 @@ function peak_split(candidate_ref, reads; thresh = 0.7, shift = 3, minReads = 5,
     end
     # TODO: maybe add singleton clusters back to cluster with closest distance
     if minimum(scoreList) < thresh
-        ind = findmin(scoreList)[2]
+        ind = argmin(scoreList)
         splitpos = scoreInds[ind]
         # if in middle of sequence
         if ind < length(scoreInds) - 1
