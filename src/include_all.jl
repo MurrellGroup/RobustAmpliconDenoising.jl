@@ -2,9 +2,10 @@
 # maybe remove for final version
 using Reexport
 using Compat
-#using DPMeansClustering
-#@reexport using NextGenSeqUtils
+using DPMeansClustering
+@reexport using NextGenSeqUtils
 using Distributions
+using Distances
 
 include("consensus.jl")
 include("clusterpipeline.jl")
