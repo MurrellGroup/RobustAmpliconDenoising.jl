@@ -104,7 +104,7 @@ function kmer_split_consensus(kmer_vecs, seqs, fine_indices; verbose::Int64=1, d
     seq_clusters = [seqs[fine_indices[ind]] for ind in 1:length(fine_indices)]
 
     #determine consensus sequences that spawned each of the sequence clusters
-    consensus = [consensus_seq(5, clust, degap_param = degap_param) for clust in seq_clusters]
+    consensus = [consensus_seq(clust, degap_param = degap_param) for clust in seq_clusters]
 
 
     consensus, sizes = FAD_clean(consensus, [length(indices) for indices in fine_indices])
@@ -135,7 +135,7 @@ function kmer_split_consensus(kmer_vecs, seqs, fine_indices; verbose::Int64=1, d
             cluster_indices=cluster_indices[arr]
             sizes=sizes[arr]
             seq_clusters = [seqs[cluster_indices[ind]] for ind in 1:length(cluster_indices)]
-            consensus = [consensus_seq(ind, seq_clusters[ind], degap_param = degap_param) for ind in 1:length(seq_clusters)]
+            consensus = [consensus_seq(seq_clusters[ind], degap_param = degap_param) for ind in 1:length(seq_clusters)]
             return consensus, sizes, cluster_indices
         else
             return consensus[arr], sizes[arr], cluster_indices[arr]

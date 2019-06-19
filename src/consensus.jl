@@ -414,7 +414,7 @@ vector (see `get_centroid(reads, k, distfunc)`) and refining it (see `refine_ref
 `shift` determines the window size of comparison between sequences when refining rough centroid
 locally (actual window size is `shift+1`).
 """
-function consensus_seq(ind, reads; degap_param = true, thresh = 0.7, shift = 1, k = 6,
+function consensus_seq(reads; degap_param = true, thresh = 0.7, shift = 1, k = 6,
                        distfunc = corrected_kmer_dist)
     ref = get_centroid(reads, k, distfunc)
     return refine_ref(ref, reads, degap_param = degap_param, thresh = thresh, shift = shift)
