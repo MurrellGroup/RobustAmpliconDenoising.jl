@@ -33,3 +33,5 @@ write_fasta("someOutputFile.fasta",templates,names = ["seq$(j)_$(template_sizes[
 
 ## But...
 You likely want to filter your reads by length, and by expected error rate. Also, PacBio reads come in random orientations, and you probably want to figure out how they should be oriented.
+
+For an example for how to orient using primers, see: https://nextjournal.com/Murrell-Lab/scfv-fad-analysis/
