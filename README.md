@@ -1,3 +1,6 @@
+## To use the RAD/FAD webserver tool, please visit:
+https://biotools.ki.murrell.group/study/denoise/
+
 ## Note: This package is not yet registered for Julia v1.0. To install this package on Julia 1.0, please use the following:
 ```julia 
 using Pkg
@@ -12,14 +15,6 @@ Robust amplicon denoiser (RAD) contains cluster and consensus tools. Packaging i
 
 ## DOCS
 https://murrellgroup.github.io/RobustAmpliconDenoising.jl/
-
-## Installation (OLD - for julia v0.6)
-We need to install 3 packages to run RAD.
-```julia
-Pkg.clone("https://github.com/MurrellGroup/NextGenSeqUtils.jl.git")
-Pkg.clone("https://github.com/MurrellGroup/DPMeansClustering.jl.git")
-Pkg.clone("https://github.com/MurrellGroup/RobustAmpliconDenoising.jl.git")
-```
 
 ## Load
 ```julia
