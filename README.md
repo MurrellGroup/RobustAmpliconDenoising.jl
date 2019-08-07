@@ -12,19 +12,12 @@ Pkg.add(PackageSpec(name="DPMeansClustering", rev="1.0", url = "https://github.c
 Pkg.add(PackageSpec(name="RobustAmpliconDenoising", rev="1.0", url = "https://github.com/MurrellGroup/RobustAmpliconDenoising.jl.git"))
 ```
 
-## Synopsis
-
-Robust amplicon denoiser (RAD) contains cluster and consensus tools. Packaging in progress, so installation is not completely straightforward yet.
-
-## DOCS
-https://murrellgroup.github.io/RobustAmpliconDenoising.jl/
-
-## Load
+## Getting started quickly:
+Load the package:
 ```julia
 using RobustAmpliconDenoising
 ```
-
-## Getting started quickly:
+The run, via:
 ```julia
 seqs, QVs, seq_names = read_fastq("someInputFile.fastq")
 templates,template_sizes,template_indices = denoise(seqs)
@@ -35,3 +28,6 @@ write_fasta("someOutputFile.fasta",templates,names = ["seq$(j)_$(template_sizes[
 You likely want to filter your reads by length, and by expected error rate. Also, PacBio reads come in random orientations, and you probably want to figure out how they should be oriented.
 
 For an example for how to orient using primers, see: https://nextjournal.com/Murrell-Lab/scfv-fad-analysis/
+
+## DOCS
+https://murrellgroup.github.io/RobustAmpliconDenoising.jl/
