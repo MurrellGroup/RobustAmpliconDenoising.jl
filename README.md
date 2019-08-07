@@ -1,3 +1,11 @@
+## Note: This package is not yet registered for Julia v1.0. To install this package on Julia 1.0, please use the following:
+```julia 
+using Pkg
+Pkg.add(PackageSpec(name="NextGenSeqUtils", rev="1.0", url = "https://github.com/MurrellGroup/NextGenSeqUtils.jl.git"))
+Pkg.add(PackageSpec(name="DPMeansClustering", rev="1.0", url = "https://github.com/MurrellGroup/DPMeansClustering.jl.git"))
+Pkg.add(PackageSpec(name="RobustAmpliconDenoising", rev="1.0", url = "https://github.com/MurrellGroup/RobustAmpliconDenoising.jl.git"))
+```
+
 ## Synopsis
 
 Robust amplicon denoiser (RAD) contains cluster and consensus tools. Packaging in progress, so installation is not completely straightforward yet.
@@ -5,7 +13,7 @@ Robust amplicon denoiser (RAD) contains cluster and consensus tools. Packaging i
 ## DOCS
 https://murrellgroup.github.io/RobustAmpliconDenoising.jl/
 
-## Installation
+## Installation (OLD - for julia v0.6)
 We need to install 3 packages to run RAD.
 ```julia
 Pkg.clone("https://github.com/MurrellGroup/NextGenSeqUtils.jl.git")
