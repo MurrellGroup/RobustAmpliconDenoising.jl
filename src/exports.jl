@@ -5,7 +5,7 @@ export
 	# clusterpipeline.jl
 
 	denoise,
-    	denoise_pipeline,
+    denoise_pipeline,
 	alignment_consensus,
 	get_centroid,
 	
@@ -15,5 +15,4 @@ export
 	disagreements,
 	diff_in_homopolymer_region,
 	get_coarse_centroid,
-	trim_to_refs,
-
+	trim_to_refs
