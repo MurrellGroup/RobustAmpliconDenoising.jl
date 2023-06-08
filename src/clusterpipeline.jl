@@ -1,4 +1,4 @@
-# Consensu and fine splitting functions
+# Consensus and fine splitting functions
 
 """
     denoise(seqs; <keyword arguments> )
@@ -59,9 +59,12 @@ function denoise(seqs; rough_radius::Float64=0.01, fine_radius::Float64=1.0, rea
 
     #transforms input sequences into vectors of kmer frequencies
     kmer_vecs = [kmer_count(seq, k) for seq in seqs];
-    fine_indices =  fine_clustering(kmer_vecs, rough_radius=rough_radius, fine_radius=fine_radius, clust_multiplier=clust_multiplier,
-                           min_devs=min_devs, initial_devs=initial_devs, user_min_clust=user_min_clust, distfunc=distfunc,
-                           center=center, verbose=verbose, cycle_lim=cycle_lim, triangle=triangle, p_value=p_value)
+
+    fine_indices =  kmer_split_clustering(kmer_vecs, seqs, rough_radius=rough_radius, fine_radius=fine_radius,
+                        reassign=reassign, clust_multiplier=clust_multiplier, min_devs=min_devs, initial_devs=initial_devs,
+                        user_min_clust=user_min_clust, k=k, distfunc=distfunc, center=center, verbose=verbose,
+                        cycle_lim=cycle_lim, triangle=triangle, p_value=p_value)
+
     return kmer_split_consensus(kmer_vecs, seqs, fine_indices, verbose=verbose, distfunc=distfunc, reassign=reassign,
                             k=k, degap_param=degap_param, user_min_clust=user_min_clust, Polish=Polish)
 end
@@ -74,7 +77,7 @@ end
 
 Returns the fine clustering result from the given sequences.
 
-
+"""
 function kmer_split_clustering(kmer_vecs, seqs; rough_radius::Float64=0.01, fine_radius::Float64=1.0, reassign::Bool=true,
                         clust_multiplier::Float64=1.0, min_devs::Int64=6, initial_devs::Int64=20, user_min_clust::Int64=5,
                         k::Int64=6, distfunc=euclidean, center=mean, verbose::Int64=1, cycle_lim=20, triangle::Bool=true,
@@ -86,7 +89,6 @@ function kmer_split_clustering(kmer_vecs, seqs; rough_radius::Float64=0.01, fine
                            min_devs=min_devs, initial_devs=initial_devs, user_min_clust=user_min_clust, distfunc=distfunc,
                            center=center, verbose=verbose, cycle_lim=cycle_lim, triangle=triangle, p_value=p_value)
 end
-"""
 
 """
     kmer_split_consensus(kmer_vecs, seqs, fine_indices; verbose::Int64=1, distfunc=euclidean, reassign::Bool=true,
@@ -105,8 +107,6 @@ function kmer_split_consensus(kmer_vecs, seqs, fine_indices; verbose::Int64=1, d
 
     #determine consensus sequences that spawned each of the sequence clusters
     consensus = [consensus_seq(clust, degap_param = degap_param) for clust in seq_clusters]
-
-
     consensus, sizes = FAD_clean(consensus, [length(indices) for indices in fine_indices])
     #adds back singletons from a preliminary clustering step in fine_clustering in order to obtain more
     #accurate frequencies
@@ -114,7 +114,7 @@ function kmer_split_consensus(kmer_vecs, seqs, fine_indices; verbose::Int64=1, d
         if verbose > 0
             println("Reassigning singleton inputs to consensus sequences to improve accuracy of frequencies")
         end
-        ave_dist_arr = Array{Float64, 1}(undef, length(seqs))
+        ave_dist_arr = Array{Float64, 1}(length(seqs))
         consensus_vecs =  [kmer_count(seq, k) for seq in consensus];
         num_C = length(consensus_vecs)
         num_vecs = length(kmer_vecs)
@@ -123,11 +123,11 @@ function kmer_split_consensus(kmer_vecs, seqs, fine_indices; verbose::Int64=1, d
         for i in 1:num_vecs
             curr_input = kmer_vecs[i]
             dists = [distfunc(C_arr[j], curr_input) for j in 1:num_C]
-            min_index = findmin(dists)[2]
+            min_index = indmin(dists)
             push!(cluster_indices[min_index], i)
         end
         sizes = [length(cluster) for cluster in cluster_indices]
-        arr = findall(user_min_clust .< sizes) #consensus seqs with zero inputs disappear!
+        arr = find(user_min_clust.<sizes) #consensus seqs with zero inputs disappear!
         if verbose > 0
             println("After reassigning, there are $(length(arr)) templates")
         end
@@ -135,7 +135,7 @@ function kmer_split_consensus(kmer_vecs, seqs, fine_indices; verbose::Int64=1, d
             cluster_indices=cluster_indices[arr]
             sizes=sizes[arr]
             seq_clusters = [seqs[cluster_indices[ind]] for ind in 1:length(cluster_indices)]
-            consensus = [consensus_seq(seq_clusters[ind], degap_param = degap_param) for ind in 1:length(seq_clusters)]
+            consensus = [consensus_seq(clust, degap_param = degap_param) for clust in seq_clusters]
             return consensus, sizes, cluster_indices
         else
             return consensus[arr], sizes[arr], cluster_indices[arr]
@@ -145,7 +145,7 @@ function kmer_split_consensus(kmer_vecs, seqs, fine_indices; verbose::Int64=1, d
     end
 end
 
-function FAD_clean(seqs, sizes; alpha = 0.01, neigh_thresh = 1.0, method = 2, err_rate=0.02, phreds = nothing)
+function FAD_clean(seqs, sizes; alpha = 0.01, neigh_thresh = 1.0,method = 2,err_rate=0.02, phreds = nothing)
     expected_zero_errors=1.0
     if !(method in [1,2])
         warn("Please pick a method in 1,2,3")
@@ -158,7 +158,7 @@ function FAD_clean(seqs, sizes; alpha = 0.01, neigh_thresh = 1.0, method = 2, er
 
 #    counts = countmap(seqs);
     seq_keys = seqs;
-    seq_freqs_all = reverse(sort([(sizes[k],seq_keys[k],kmer_count(seq_keys[k],6)) for k in 1:length(seq_keys)]));
+seq_freqs_all = reverse(sort([(sizes[k],seq_keys[k],kmer_count(seq_keys[k],6)) for k in 1:length(seq_keys)]));
     seq_freqs = seq_freqs_all[[k[1]>=2 for k in seq_freqs_all]];
 
 
@@ -173,19 +173,19 @@ function FAD_clean(seqs, sizes; alpha = 0.01, neigh_thresh = 1.0, method = 2, er
         else
             if method == 2
                 inds = collect(1:length(current_set))[neighbour_set]
-                best = findmax(current_set[inds])[2]
+                best = indmax(current_set[inds])
                 p_val = (1-cdf(Poisson((current_set[inds][best][1]/expected_zero_errors)*err_rate),seq_freqs[i][1]))*length(seq_freqs[i][2])
                 if p_val < alpha
                     push!(current_set,seq_freqs[i])
                 end
-            end
+            end                
         end
     end
 
     frequencies = zeros(length(current_set))
     for s in seq_freqs_all
         dists = [corrected_kmer_dist_full(k[3],s[3],k=6) for k in current_set]
-        frequencies[findmin(dists)[2]] += s[1]
+        frequencies[indmin(dists)] += s[1]
     end
     return [k[2] for k in current_set],frequencies
 
@@ -200,7 +200,7 @@ Finds the average distance using the declared distance function
 function get_ave_dists(fine_indices, original_seqs, consensus_seqs; distfunc=euclidean, center=median, k::Int64=6)
     kmer_vecs = [kmer_count(seq, k) for seq in original_seqs];
     num_seqs = length(consensus_seqs)
-    ave_dist_arr = Array{Float64, 1}(undef, num_seqs)
+    ave_dist_arr = Array{Float64, 1}(num_seqs)
     consensus_vecs = [kmer_count(seq, k) for seq in consensus_seqs];
     for ind in 1:num_seqs
         arr = consensus_vecs[ind]
@@ -695,7 +695,7 @@ function trim_to_refs(seqs::Array{String, 1}, refs::Array{String, 1}; kmersize =
         vec = sparse_aa_kmer_count(sq, kmersize)
         # compare to every reference, update min dists
         matches = [dot(vec, rfk) for rfk in ref_kmers]
-        best_match_i = findmax(matches)[2]
+        best_match_i = indmax(matches)
         if best_match_i > 0
             ali = loc_kmer_seeded_align(refs[best_match_i], sq)
             return degap(ali[2])

@@ -5,7 +5,6 @@ using Compat
 using DPMeansClustering
 @reexport using NextGenSeqUtils
 using Distributions
-using Distances
 
 include("consensus.jl")
 include("clusterpipeline.jl")
