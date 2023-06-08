@@ -96,9 +96,9 @@ uuid = "8f4d0f93-b110-5947-807f-2305c1781a2d"
 version = "1.8.0"
 
 [[deps.DPMeansClustering]]
-deps = ["Distances", "NextGenSeqUtils", "Reexport", "Statistics", "StatsBase"]
-git-tree-sha1 = "c2de009354fbd40d86bd64da6cfb2cf0c447d059"
-repo-rev = "1.0"
+deps = ["Distances", "Reexport", "Statistics", "StatsBase"]
+git-tree-sha1 = "f23ec4c86c06c399d35999eaad7d0f70c37e86a7"
+repo-rev = "manifest-fix"
 repo-url = "https://github.com/MurrellGroup/DPMeansClustering.jl.git"
 uuid = "37097376-7805-5844-a42f-f170eef30b7c"
 version = "0.0.0"
@@ -308,8 +308,8 @@ version = "1.2.0"
 
 [[deps.NextGenSeqUtils]]
 deps = ["BioSequences", "CodecZlib", "Distances", "Distributions", "FASTX", "Levenshtein", "LinearAlgebra", "MultivariateStats", "PyPlot", "Reexport", "StatsBase"]
-git-tree-sha1 = "eb6e447b974bccf503b40dfaa10cafc333480b36"
-repo-rev = "Missing-LongCharSeq-fix"
+git-tree-sha1 = "f4d678043f0cf016a72cf2af4e86334f85a7ca0c"
+repo-rev = "manifest-fix"
 repo-url = "https://github.com/MurrellGroup/NextGenSeqUtils.jl.git"
 uuid = "59ec5594-ae11-5d8d-a868-831a7e904d88"
 version = "0.1.2"
