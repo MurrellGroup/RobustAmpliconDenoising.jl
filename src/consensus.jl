@@ -3,18 +3,18 @@
 
 
 """
-   fine_clustering(kmer_vecs; rough_radius::Float64 = 0.01, fine_radius::Float64 = 1.0, clust_multiplier = 1.0, 
+   fine_clustering(kmer_vecs; rough_radius::Float64 = 0.01, fine_radius::Float64 = 1.0, clust_multiplier = 1.0,
                         min_devs = 6, initial_devs = 20, user_min_clust = 10, distfunc = euclidean, center = mean,
                         verbose::Int64 = 1, cycle_lim = 20, triangle::Bool = false, p_value::Float64 = 0.01)
 
-Preforms fine clustering on the already rough clustered sequences. 
+Preforms fine clustering on the already rough clustered sequences.
 
 """
 
-function fine_clustering(kmer_vecs; rough_radius::Float64=0.01, fine_radius::Float64=1.0, clust_multiplier=1.0, 
-                        min_devs=6, initial_devs=20, user_min_clust=10, distfunc=euclidean, center=mean, verbose::Int64=1, 
+function fine_clustering(kmer_vecs; rough_radius::Float64=0.01, fine_radius::Float64=1.0, clust_multiplier=1.0,
+                        min_devs=6, initial_devs=20, user_min_clust=10, distfunc=euclidean, center=mean, verbose::Int64=1,
                         cycle_lim=20, triangle::Bool=false, p_value::Float64=0.01)
-    
+
     if verbose > 0
         println("Your inputs have begun rough clustering...")
     end
@@ -23,17 +23,19 @@ function fine_clustering(kmer_vecs; rough_radius::Float64=0.01, fine_radius::Flo
     elseif verbose == 0
         v = 0
     end
+
     #"rough" clustering step to get the massively different sequences into different clusters
     μs, sizes, indices, centroid_inds = cluster(kmer_vecs, rough_radius, distfunc=corrected_kmer_dist,
                                         center=center,verbose=v, cycle_lim=cycle_lim, triangle=triangle)
+
     #only sequences greater than indicated size may form a cluster
-    keep_inds = find(user_min_clust.<sizes)
+    keep_inds = findall(user_min_clust .< sizes)
     indices = indices[keep_inds]
-    
+
     fine_indices = Array{Array{Int64, 1}, 1}()
     #get array which converts kmer indices into kmer sequences
     nuc_inds = gen_arrangements(Int(log(4, length(kmer_vecs[1]))))
-    
+
     if verbose > 0
         println("Your inputs have begun fine clustering...")
     end
@@ -42,7 +44,7 @@ function fine_clustering(kmer_vecs; rough_radius::Float64=0.01, fine_radius::Flo
     elseif verbose == 2
         in_verbose = 1
     end
-    
+
     #call cluster_split on every cluster created by rough clustering
     for ind in 1:length(indices)
         if verbose > 0
@@ -51,9 +53,10 @@ function fine_clustering(kmer_vecs; rough_radius::Float64=0.01, fine_radius::Flo
         temp =cluster_split(kmer_vecs[indices[ind]], 1, nuc_inds, rough_radius=rough_radius, fine_radius=fine_radius,
             clust_multiplier=clust_multiplier, min_devs=min_devs, initial_devs=initial_devs, user_min_clust=user_min_clust,
             distfunc=euclidean,center=center, verbose=in_verbose, cycle_lim=cycle_lim, triangle=triangle, p_value=p_value)
-        for arr in temp
-            push!(fine_indices, indices[ind][arr])
+        for i in 1:length(temp)
+            push!(fine_indices, indices[ind][temp[i]])
         end
+
     end
     if verbose > 0
         println("Returning $(length(fine_indices)) templates")
@@ -84,27 +87,33 @@ end
 
 Determines if passed cluster is a 'real' cluster and recursively splits non-error clusters
 """
-function cluster_split(kmer_vecs, count, nuc_inds; rough_radius::Float64=0.01, fine_radius::Float64=1.0, clust_multiplier=1.0, 
-                        min_devs=6, initial_devs=20, user_min_clust=10, distfunc=euclidean, 
+function cluster_split(kmer_vecs, count, nuc_inds; rough_radius::Float64=0.01, fine_radius::Float64=1.0, clust_multiplier=1.0,
+                        min_devs=6, initial_devs=20, user_min_clust=10, distfunc=euclidean,
                         center=mean, verbose::Int64=1, cycle_lim=20, triangle::Bool=false, p_value::Float64=0.01)
     if verbose == 2
         println("______________________________________________")
-        println("Current level of cluster_split recursion is $(count)")      
+        println("Current level of cluster_split recursion is $(count)")
         count+=1
     end
-    
+
     k = Int(log(4, length(kmer_vecs[1])))
     num_vecs = length(kmer_vecs)
-    
+    #stdevs=Array{Float64, 1}()
     #arr of each kmer's stdev throughout the kmer vectors
+    aple=[[kmer_vecs[seq_ind][kmer_ind] for seq_ind in 1:length(kmer_vecs)] for kmer_ind in 1:4^k]
+
     stdevs = [std([kmer_vecs[seq_ind][kmer_ind] for seq_ind in 1:length(kmer_vecs)]) for kmer_ind in 1:4^k]
+
+
     #arr of indices of high->low stdev kmer indices
     dev_inds = reverse(sortperm(stdevs))[1:initial_devs]#setting the number of kmers high results in a lack of splitting
-    
+
+
+
     #eliminate kmer indices that represent homopolymer differences
     dev_inds = get_non_homopolymers(dev_inds, nuc_inds, min_devs=min_devs)
-    
-    if length(dev_inds) == 0 
+
+    if length(dev_inds) == 0
         return [[i for i in 1:length(kmer_vecs)]]
     end
     #kmer counts of high stdev kmer indices
@@ -112,51 +121,52 @@ function cluster_split(kmer_vecs, count, nuc_inds; rough_radius::Float64=0.01, f
     #cluster kmers by high stdev indices
     us,sizes,indices,C_inds =cluster(top_kmers, fine_radius,distfunc=distfunc,center=center,
                                             verbose=verbose,cycle_lim=cycle_lim, triangle=triangle)
+
     #replace 2nd largest with each size to determine whether or not to split on it
     #p_val_arr = [(1-cdf(Poisson(maximum(sizes)*(error_rate/4)), sizes[i])) *sum(kmer_vecs[1]) for i in 1:length(sizes)]
-    
+
     #minimum non-error cluster size. Estimate of the sum of poisson distributions
     #min_clust = clust_multiplier*.25*2.5*sqrt(rough_radius*sum(kmer_vecs[1])*2*log(maximum(sizes)))
     #minimum cluster size is the largest number between user input and the minimum non-error size
-    keep_inds = find(user_min_clust.<sizes)
+    keep_inds = findall(user_min_clust .< sizes)
     #keep_inds = Array{Int64, 1}()
     #for ind in first_keep_inds
 
-    
+
     #keep_inds = [ind for ind in first_keep_inds if (1-cdf(Poisson(maximum(sizes)*(rough_radius/4)), sizes[ind])) *sum(kmer_vecs[1]) < p_value]
 
-    #if there are no clusters to keep, add everything to the largest one 
+    #if there are no clusters to keep, add everything to the largest one
     if length(keep_inds) == 0 || length(keep_inds) == 1
         return [[i for i in 1:length(kmer_vecs)]]
     else
-        final_indices = Array{Array{Int64, 1}, 1}()      
+        final_indices = Array{Array{Int64, 1}, 1}()
         keep_centers = [center(kmer_vecs[indices[keep]]) for keep in keep_inds]
-        
+
         for keep in keep_inds
             push!(final_indices, indices[keep])
         end
-        
+
         for i in 1:length(indices) #go through every cluster index
             if !(i in keep_inds) #if that cluster is not one of the kept clusters
                 C_arr = indices[i] #get the array of seq indices corresponding to the cluster
                 for index in C_arr #go through every seq indix in the non-kept cluster
-                    push!(final_indices[indmin([distfunc(kmer_vecs[index], center) for center in keep_centers])],
+                    push!(final_indices[argmin([distfunc(kmer_vecs[index], center) for center in keep_centers])],
                             index)
                 end
             end
         end
-    end  
-    
-    #if the input has gotten this far, it must be split. Call cluster_split on each current cluster 
+    end
+
+    #if the input has gotten this far, it must be split. Call cluster_split on each current cluster
     for clust_ind in 1:length(final_indices)
         outer_clust = copy(final_indices[clust_ind])
-        new_clusts = cluster_split(kmer_vecs[outer_clust], count, nuc_inds, rough_radius=rough_radius, fine_radius=fine_radius, 
+        new_clusts = cluster_split(kmer_vecs[outer_clust], count, nuc_inds, rough_radius=rough_radius, fine_radius=fine_radius,
                                     min_devs=min_devs, distfunc=distfunc,center=center,verbose=verbose,
                                     cycle_lim=cycle_lim, triangle=triangle, p_value=p_value)
         for new_clust in new_clusts
             push!(final_indices, outer_clust[new_clust])
         end
-        final_indices = deleteat!(final_indices, clust_ind)            
+        final_indices = deleteat!(final_indices, clust_ind)
 
     end
     return final_indices
@@ -185,7 +195,7 @@ function get_non_homopolymers(dev_inds::Array{Int64, 1}, nuc_inds; min_devs=6)
     end
     #difference between all indices and the homopolymer indices is the non homopolymer indices
     new_dev_inds = setdiff(dev_inds, dev_inds[unique(to_remove)])
-    
+
     if length(new_dev_inds) < min_devs #if there aren't enough indices, empty array says "don't split!"
         return []
     else
@@ -211,9 +221,8 @@ function are_homopolymers(alignment::Tuple{String,String};k=6,polylen::Int64=3)
     if polylen > k - 1
         return false
     end
-
-    ind1 = findfirst(alignment[1], '-')#findfirst(isequal('-'), alignment[1])
-    ind2 = findfirst(alignment[2], '-')#findfirst(isequal('-'), alignment[2])
+    ind1 = findfirst(x->x=='-', alignment[1])#findfirst(isequal('-'), alignment[1])
+    ind2 = findfirst(x->x=='-', alignment[2])#findfirst(isequal('-'), alignment[2])
     diff = ind1-ind2
     #determine if inds are only on edges
     #        XXXXX- (ind1)
@@ -234,7 +243,7 @@ function are_homopolymers(alignment::Tuple{String,String};k=6,polylen::Int64=3)
         if length(unique(al1[1:(1+polylen)] * al2[1:(1+polylen)])) == 2 #edge box is true. THIS MEANS NO HOMOPOLY!!!
             return false
 
-        else #edge box is false. May be a homopoly. 
+        else #edge box is false. May be a homopoly.
             if temp + polylen <= len && length(unique(al1[temp:(temp+polylen)]*al2[temp:(temp+polylen)])) == 2
                 return true
             elseif temp - polylen >= 1 && length(unique(al1[(temp-polylen):temp]*al2[(temp-polylen):temp])) == 2
@@ -290,11 +299,11 @@ function are_homopolymers(alignment::Tuple{String,String};k=6,polylen::Int64=3)
     arr = [alignment[1]... , alignment[2]... ]
     #max homopolymer length difference is 2
     if length(findin(arr, '-')) > 2
-        return false 
+        return false
     end
-    
+
     len = length(alignment[1])
-    
+
     #check left->right
     for i in 1:len
         if i+polylen > len #no chance of sufficiently large polymer, break
@@ -329,7 +338,7 @@ function are_homopolymers(alignment::Tuple{String,String};k=6,polylen::Int64=3)
         elseif (alignment[2][i] == '-')
             @inbounds temp = alignment[1][(i-polylen):(i-1)]
             temp2 = alignment[2][i-polylen:i]
-            if length(unique(temp)) == 1 && length(unique(temp2)) == 2                
+            if length(unique(temp)) == 1 && length(unique(temp2)) == 2
                 return true
             end
         end
@@ -341,8 +350,8 @@ end
 
 #==
       OLD VERSION
-==#         
-            
+==#
+
 """
     alignment_consensus(seqs)
 
@@ -371,7 +380,7 @@ function coords(ref, read)
         error("Aligned strings are meant to be the same length.")
     end
     degappedRef = degap(ref)
-    coordMap = Array{Int64}(length(degappedRef))
+    coordMap = Array{Int64, 1}(undef, length(degappedRef))
     count = 1
     for i in 1:length(degappedRef)
         while ref[count] == '-'
@@ -393,7 +402,7 @@ function get_centroid(reads, k, distfunc = corrected_kmer_dist)
     kmerVecs = [kmer_count(read, k) for read in reads]
     meanVec = mean(kmerVecs)
     dists = [distfunc(kmerVec, meanVec, k=k) for kmerVec in kmerVecs]
-    return reads[indmin(dists)]
+    return reads[argmin(dists)]
 end
 
 """
@@ -402,7 +411,7 @@ end
 
 Computes a cluster centroid by taking the nearest read to the mean `k`-mer
 vector (see `get_centroid(reads, k, distfunc)`) and refining it (see `refine_ref(ref, reads)`).
-`shift` determines the window size of comparison between sequences when refining rough centroid 
+`shift` determines the window size of comparison between sequences when refining rough centroid
 locally (actual window size is `shift+1`).
 """
 function consensus_seq(reads; degap_param = true, thresh = 0.7, shift = 1, k = 6,
@@ -428,7 +437,7 @@ end=#
 """
     get_matches(candidate_ref, reads, shift; kmer_align = true)
 
-Determine alignments between each sequence of `reads` and `candidate_ref`, along with coordinate mappings 
+Determine alignments between each sequence of `reads` and `candidate_ref`, along with coordinate mappings
 and local matches. Used internally in `refine_ref` and `peak_split`.
 """
 function get_matches(candidate_ref, reads, shift; degap_param = true, kmer_align = true)
@@ -438,17 +447,18 @@ function get_matches(candidate_ref, reads, shift; degap_param = true, kmer_align
     else
         alignments = map(i -> nw_align(candidate_ref, i), reads)
     end
+
     maps = [coords(i...) for i in alignments]
-       
-    
+
+
     if (degap_param)
         matchContent = [[degap(alignments[i][2][maps[i][k]:maps[i][k+shift]]) for i in 1:length(maps)] for k in 1:length(candidate_ref)-shift]
-        
+
         matches = [freq(matchContent[k], degap(candidate_ref[k:k+shift])) for k in 1:length(matchContent)]
 
     else
        matchContent = [[(alignments[i][2][maps[i][k]:maps[i][k+shift]]) for i in 1:length(maps)] for k in 1:length(candidate_ref)-shift]
-        
+
        matches = [freq(matchContent[k], candidate_ref[k:k+shift]) for k in 1:length(matchContent)]
 
 
@@ -462,7 +472,7 @@ end
     refine_ref(candidate_ref, reads;  thresh = 0.7, shift = 1)
 
 Takes a candidate consensus sequence, `candidate_ref`, and corresponding array of `reads` and refines the candidate via majority
-votes from reads at local windows of size `shift+1`. If after alignment the frequency of a local region of the candidate 
+votes from reads at local windows of size `shift+1`. If after alignment the frequency of a local region of the candidate
 is less than `thresh`, this part of the candidate is refined.
 
 """
@@ -472,20 +482,23 @@ function refine_ref(candidate_ref, reads; degap_param = true, thresh = 0.7, shif
 
     alignments, maps, matches, _ = get_matches(candidate_ref, reads, shift, degap_param = degap_param)
 
-    boolVec = BitArray{1}(1+zeros(length(candidate_ref)))
+    boolVec = trues(length(candidate_ref))
+#BitArray{1}(1+zeros(length(candidate_ref)))
     for i in 1:length(matches)
         if matches[i] < thresh
-            boolVec[i:i+shift] = false
+            for ind in i:i+shift
+                boolVec[ind]=false
+            end
         end
-    end            
-    
+    end
+
     # need to explicitly handle the case where the reference is shorter than the reads.
     # refine front
     frontStrCol = [degap((alignments[j][2])[1:maps[j][1]-1]) for j in 1:length(maps)]
     frontNonEmpties = [length(s) != 0 for s in frontStrCol]
     frontConsensus = ""
     majority = length(alignments) / 2
-    while countnz(frontNonEmpties) > majority
+    while length(findall(x->x!=0, frontNonEmpties)) > majority
         frontStrCol = frontStrCol[frontNonEmpties]
         frontConsensus = mode(frontStrCol)
         frontAli, frontMaps, _, _ = get_matches(frontConsensus, frontStrCol, 1, degap_param = degap_param, kmer_align=false)
@@ -494,13 +507,13 @@ function refine_ref(candidate_ref, reads; degap_param = true, thresh = 0.7, shif
         majority = length(frontAli) / 2
     end
     frontStr = frontConsensus
-    
+
     # refine end
     endStrCol = [degap((alignments[j][2])[maps[j][end]+1:end]) for j in 1:length(maps)]
     endNonEmpties = [length(s) != 0 for s in endStrCol]
     endConsensus = ""
     majority = length(alignments) / 2
-    while countnz(endNonEmpties) > majority
+    while length(findall(x->x!=0, endNonEmpties)) > majority
         endStrCol = endStrCol[endNonEmpties]
         endConsensus = mode(endStrCol)
         endAli, endMaps, _, _ = get_matches(endConsensus, endStrCol, 1, degap_param = degap_param, kmer_align=false)
@@ -511,7 +524,7 @@ function refine_ref(candidate_ref, reads; degap_param = true, thresh = 0.7, shif
     endStr = endConsensus
 
     # # if something breaks, CHECK THIS FIRST!
-    if sum(1-boolVec) < 0.5
+    if (length(boolVec)-sum(boolVec)) < 0.5
         return frontStr * candidate_ref * endStr
     end
     ranges = []
@@ -547,12 +560,12 @@ end
 """
     recursive_split(cluster, glom; centroid = "", shift = 7, minreads = 5, polylen = 3, k = 6, reads = nothing, phreds = nothing, names = nothing)
 
-Recursively splits input `cluster` using `peak_split` and populates `glom` with the separated sub-clusters. 
+Recursively splits input `cluster` using `peak_split` and populates `glom` with the separated sub-clusters.
 Splits clusters according to `centroid` (unless not given, in which case it is inferred).
 `polylen` is lower bound for run-on subsequence to by considered a homopolymer region and not be split on.
 Does not split on clusters of size less than `minReads`.
-If `reads` is given as a string array, this will populate `reads` with tuples of `(cluster, phreds, names)` for 
-determining the actual clusters that are split, rather than just corresponding consensus sequences, where `phreds` 
+If `reads` is given as a string array, this will populate `reads` with tuples of `(cluster, phreds, names)` for
+determining the actual clusters that are split, rather than just corresponding consensus sequences, where `phreds`
 and `names` may be arrays of corresponding values, or `nothing`.
 """
 function recursive_split(cluster::Array{String}, glom; centroid = "", shift = 7, minreads = 5, polylen = 3, k = 6, reads = nothing, phreds = nothing, names = nothing)
@@ -586,7 +599,7 @@ If the size of the input cluster `reads` is large, then `thresh` may be changed:
 Size of local window/site for comparison = `shift+1`.
 Return values are arrays of boolean arrays, where each boolean array can be used to index into the input reads data to give the split clusters.
 Determines  treshold for a cluster split, where if the candidate has local region with frequency less than `thresh` the cluster is split,
- to be `thresh = max(1-10/length(reads), thresh)` to account for larger cluster sizes. 
+ to be `thresh = max(1-10/length(reads), thresh)` to account for larger cluster sizes.
 `polylen` is lower bound for run-on subsequence to by considered a homopolymer region and not be split on.
 Does not split on clusters of size less than `minReads`.
 """
@@ -596,15 +609,15 @@ function peak_split(candidate_ref, reads; thresh = 0.7, shift = 3, minReads = 5,
     if length(reads) < minReads
         return [BitArray([true for r in reads])]
     end
-    # Adjusting thresh is meant to account for the fact that 30% of a very large cluster is still very large, 
+    # Adjusting thresh is meant to account for the fact that 30% of a very large cluster is still very large,
     #  so we assume that, for large clusters, if we have 10 seqs, that is enough to split into a new cluster.
-    # However, this will fail for very very large clusters that have 10 sequences that have the same mismatch base error. 
+    # However, this will fail for very very large clusters that have 10 sequences that have the same mismatch base error.
     # Need to build in the expected number of mismatched base errors at any given base to control the false positive rate here.
     thresh = max(1-10/length(reads), thresh)
     numSteps = length(candidateRef) - shift
     #Need to add in code to handle deletions at the start and end of the candidate!
     alignments, maps, matches, matchContent = get_matches(candidateRef, reads, shift)
-    boolVec = BitArray{1}(1 + zeros(length(candidateRef)))
+    boolVec = trues(length(candidateRef))
     for i in 1:length(matches)
         if (matches[i] < thresh)
             boolVec[i:i+shift] = false
@@ -628,7 +641,7 @@ function peak_split(candidate_ref, reads; thresh = 0.7, shift = 3, minReads = 5,
         end
         i += 1
     end
-    
+
     # add 2 to lengths to account for front and end as well
     scoreList = 1 + zeros(length(ranges) + 2)
     scoreInds = zeros(UInt32, length(ranges) + 2)
@@ -646,16 +659,16 @@ function peak_split(candidate_ref, reads; thresh = 0.7, shift = 3, minReads = 5,
         ali = nw_align(sortedFreqs[1][2], sortedFreqs[2][2])
         if !differ_by_just_one_gap(ali, polylen=polylen)
             scoreList[i] = minimum(matches[ranges[i][1]:ranges[i][2]])
-            scoreInds[i] = indmin(matches[ranges[i][1]:ranges[i][2]]) + ranges[i][1] - 1
+            scoreInds[i] = argmin(matches[ranges[i][1]:ranges[i][2]]) + ranges[i][1] - 1
         end
     end
-    
+
     # take care of splits at overhanging beginnings of reads, where consensus is empty ("")
     # if any overhang is more common than threshold, potentially split on most common overhang
     frontStrCol = [degap(alignments[j][2][1:maps[j][1]-1]) for j in 1:length(maps)]
     frontOverhangs = [length(s) != 0 for s in frontStrCol]
     if freq(frontStrCol, "") < thresh
-        sortedFreqs = sorted_freqs([degap(alignments[j][2][1:maps[j][polylen]]) 
+        sortedFreqs = sorted_freqs([degap(alignments[j][2][1:maps[j][polylen]])
                     for j in 1:length(maps) if frontOverhangs[j]])
         if length(sortedFreqs) == 1
             scoreList[end-1] = freq(frontStrCol, mode(frontStrCol[frontOverhangs]))
@@ -667,12 +680,12 @@ function peak_split(candidate_ref, reads; thresh = 0.7, shift = 3, minReads = 5,
                 scoreInds[end-1] = 1
             end
         end
-    end  
+    end
     # take care of splits at overhanging ends
     endStrCol = [degap(alignments[j][2][maps[j][end]+1:end]) for j in 1:length(maps)]
     endOverhangs = [length(s) != 0 for s in endStrCol]
     if freq(endStrCol, "") < thresh
-        sortedFreqs = sorted_freqs([degap(alignments[j][2][maps[j][end-polylen]:end]) 
+        sortedFreqs = sorted_freqs([degap(alignments[j][2][maps[j][end-polylen]:end])
                     for j in 1:length(maps) if endOverhangs[j]])
         if length(sortedFreqs) == 1
             scoreList[end] = freq(endStrCol, mode(endStrCol[endOverhangs]))
@@ -687,7 +700,7 @@ function peak_split(candidate_ref, reads; thresh = 0.7, shift = 3, minReads = 5,
     end
     # TODO: maybe add singleton clusters back to cluster with closest distance
     if minimum(scoreList) < thresh
-        ind = indmin(scoreList)
+        ind = argmin(scoreList)
         splitpos = scoreInds[ind]
         # if in middle of sequence
         if ind < length(scoreInds) - 1
@@ -714,9 +727,9 @@ end
     differ_by_just_one_gap(alignment; polylen = 3)
 
 `alignment` is an array containing two already aligned strings.
-Returns true if first and second sequences in given array differ by 
+Returns true if first and second sequences in given array differ by
 just one gap where that gap is in a homopolymer region.
-A homopolymer region is determined to be a region of a single repeated 
+A homopolymer region is determined to be a region of a single repeated
 nucleotide of length at least `polylen`.
 """
 function differ_by_just_one_gap(alignment; polylen = 3)
@@ -748,11 +761,11 @@ function differ_by_just_one_gap(alignment; polylen = 3)
 end
 
 """
-    consensus_viz(candidate_ref, reads; thresh = 0.7, shift = 3, 
+    consensus_viz(candidate_ref, reads; thresh = 0.7, shift = 3,
                   intitle = "Consensus agreement.")
 
-Creates a plot to visualize the agreement of a consensus sequence, `candidate_ref`, 
-with its cluster of `reads`. 
+Creates a plot to visualize the agreement of a consensus sequence, `candidate_ref`,
+with its cluster of `reads`.
 Size of local window/site for comparison = `shift+1`.
 I'm pretty sure `thresh` does nothing here.
 """
@@ -790,7 +803,7 @@ function disagreements(candidate_ref, reads; thresh = 0.7, shift = 3)
                      for i in 1:length(maps)], candidate_ref[k:k+shift])
                for k in 1:length(candidate_ref)-shift]
 
-    boolVec = BitArray{1}(1+zeros(length(candidate_ref)))
+    boolVec = trues(length(candidate_ref))
     for i in 1:length(matches)
         if matches[i] < thresh
             boolVec[i:i+shift] = boolVec[i:i+shift] & [false for k in 1:1+shift]
@@ -836,9 +849,9 @@ end
 """
     diff_in_homopolymer_region(alignment::Array{String, 1}; polylen=3)
 
-Returns true if two aligned sequences differ only by single gaps in homopolyer regions 
+Returns true if two aligned sequences differ only by single gaps in homopolyer regions
 (ie one gap per region). `alignment` is an array of two strings that have already been aligned.
-A homopolymer region is determined to be a region of a single repeated 
+A homopolymer region is determined to be a region of a single repeated
 nucleotide of length at least `polylen`.
 """
 function diff_in_homopolymer_region(alignment::Array{String, 1}; polylen=3)
@@ -857,7 +870,7 @@ end
 """
     merge_consensuses(seqs)
 
-Takes in an array of 2-array [sequence, size] pairs and returns a list with 
+Takes in an array of 2-array [sequence, size] pairs and returns a list with
 reach sequence unique with summed sizes among all previous copies.
 """
 function merge_consensuses(seqs)
@@ -879,11 +892,11 @@ end
     merge_diff_homopolymers(seqs; thresh = 0.002, k = 6, polylen = 3)
 
 Takes in an array of 2-array [sequence, size] pairs and combines sequences that are identical
-or differ by single gaps in homopolymer regions, summing respective frequencies. Slower than 
-naive `merge_consensuses(seqs)`. 
-A homopolymer region is determined to be a region of a single repeated 
-nucleotide of length at least `polylen`. 
-`thresh` gives an upper bound on distance in `k`-mer space for sequences to be compared for 
+or differ by single gaps in homopolymer regions, summing respective frequencies. Slower than
+naive `merge_consensuses(seqs)`.
+A homopolymer region is determined to be a region of a single repeated
+nucleotide of length at least `polylen`.
+`thresh` gives an upper bound on distance in `k`-mer space for sequences to be compared for
 homopolymer differences.
 """
 function merge_diff_homopolymers(seqs; thresh = 0.002, k = 6, polylen = 3)
@@ -901,7 +914,7 @@ function merge_diff_homopolymers(seqs; thresh = 0.002, k = 6, polylen = 3)
                 deleteat!(tmp, j)
                 deleteat!(kmer_vecs, j)
             # if differ in homopolyer region
-            elseif corrected_kmer_dist(kmer_vecs[i], kmer_vecs[j], k=k) < thresh && 
+            elseif corrected_kmer_dist(kmer_vecs[i], kmer_vecs[j], k=k) < thresh &&
                     diff_in_homopolymer_region(kmer_seeded_align(tmp[i][1], tmp[j][1]), polylen=polylen)
                 # consolidate cluster sizes
                 tmp[i][2] += tmp[j][2]
@@ -919,8 +932,8 @@ end
 """
     get_coarse_centroid(seqs::Array{String, 1}; subsample = 1000, k = 4)
 
-Returns a 'master consensus' representing largest coarse cluster of sequences, 
-computed among a subsample of `reads`. The consensus is the closest sequence of 
+Returns a 'master consensus' representing largest coarse cluster of sequences,
+computed among a subsample of `reads`. The consensus is the closest sequence of
 `reads` to the mean `k`-mer vector in the largest computed cluster.
 """
 function get_coarse_centroid(seqs::Array{String, 1}; subsample = 1000, k = 4)
@@ -934,4 +947,3 @@ function get_coarse_centroid(seqs::Array{String, 1}; subsample = 1000, k = 4)
     @time _, sizes, _, centroid_inds = dp_centers(kmer_vecs, 0.15)
     return sampled_seqs[centroid_inds[indmax(sizes)]]
 end
-
