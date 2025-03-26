@@ -1,9 +1,6 @@
 # Robust Amplicon Denoising
 This is the repository for the Robust Amplicon Denoising tool, which is suitable for denoising very long PacBio amplicon reads with relatively high error rates. Note that FAD is now available from within the NextGenSeqUtils.jl package.
 
-## To use the RAD/FAD webserver tool, please visit:
-https://biotools.ki.murrell.group/study/denoise/
-
 ## Note: This package is not registered. To install this package, along with its dependencies, please use the following:
 ```julia 
 using Pkg
